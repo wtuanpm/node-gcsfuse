@@ -12,8 +12,19 @@ spec:
       labels:
         app: nestjs-k8s
     spec:
+      volumes:
+        - name: sa-volume
+          secret:
+            secretName: sa-secret
+            items:
+            - key: sa_json
+              path: sa_credentials.json
       containers:
         - name: nestjs-k8s
-          image: mguay/nestjs-k8s
+          image: edwardpm1206/nest-gcsfuse
+          volumeMounts:
+            - name: sa-volume
+              mountPath: /etc/gcp
+              readOnly: true
           ports:
             - containerPort: 3000
