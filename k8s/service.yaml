@@ -1,10 +1,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: nestjs-k8s
+  name: nestjs-elk
 spec:
   selector:
-    app: nestjs-k8s
+    app: nestjs-elk
   ports:
     - protocol: TCP
       port: 3000

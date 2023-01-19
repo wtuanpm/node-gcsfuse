@@ -1,30 +1,51 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nestjs-k8s
+  name: nest-elk
+  labels:
+    component: nest-elk
 spec:
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
-      app: nestjs-k8s
-  replicas: 2
+      component: nest-elk
   template:
     metadata:
       labels:
-        app: nestjs-k8s
+        component: nest-elk
     spec:
-      volumes:
-        - name: sa-volume
-          secret:
-            secretName: sa-secret
-            items:
-            - key: sa_json
-              path: sa_credentials.json
       containers:
-        - name: nestjs-k8s
+        - name: nest-elk
           image: edwardpm1206/nest-gcsfuse
+          args:
+            - sh
+            - -c
+            - >
+              while true;
+              do
+                echo $(date) - filebeat log >> /var/log/access.log;
+                sleep 10;
+              done
           volumeMounts:
-            - name: sa-volume
-              mountPath: /etc/gcp
-              readOnly: true
+            - name: log
+              mountPath: /var/log
           ports:
             - containerPort: 3000
+        - name: filebeat
+          image: elastic/filebeat:7.16.3
+          args:
+            - -c
+            - /etc/filebeat/conf.yaml
+            - -e
+          volumeMounts:
+            - name: filebeat-config
+              mountPath: /etc/filebeat
+            - name: log
+              mountPath: /var/log
+      volumes:
+        - name: log
+          emptyDir: {}
+        - name: filebeat-config
+          configMap:
+            name: filebeat-config
